@@ -197,94 +197,94 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 2. Mobile Menu — Professional Drawer with Close Button & Overlay
+    // 2. Mobile Menu — Separate drawer that never touches the desktop .nav-menu
     const navToggle = document.querySelector(".nav-toggle");
-    const navMenu   = document.querySelector(".nav-menu");
+    const navMenu   = document.querySelector(".nav-menu"); // desktop nav — left untouched
 
     if (navToggle && navMenu) {
 
-        // ── Inject overlay backdrop ──────────────────────────────────────
+        // ── 1. Overlay backdrop ──────────────────────────────────────────
         const overlay = document.createElement("div");
         overlay.className = "nav-overlay";
         document.body.appendChild(overlay);
 
-        // ── Rebuild the nav-menu inner structure ─────────────────────────
-        // Grab existing <li> elements before we clear
-        const existingItems = Array.from(navMenu.querySelectorAll("li"));
+        // ── 2. Build the mobile drawer (separate element, not nav-menu) ──
+        const drawer = document.createElement("nav");
+        drawer.className = "mobile-drawer";
+        drawer.setAttribute("aria-label", "Mobile Navigation");
 
-        // Clear the menu
-        navMenu.innerHTML = "";
+        // Read page's active link to mirror it in the drawer
+        const activePath = window.location.pathname.split("/").pop() || "index.html";
 
-        // Brand header row (ZAYNOR logo + × close button)
-        const menuHeader = document.createElement("div");
-        menuHeader.className = "nav-menu-header";
-        menuHeader.innerHTML = `
-            <span class="nav-menu-brand">ZAYNOR<span>.</span></span>
-            <button class="nav-menu-close" aria-label="Close navigation menu">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                </svg>
-            </button>`;
-        navMenu.appendChild(menuHeader);
+        const pages = [
+            { href: "index.html",    label: "Home" },
+            { href: "perfumes.html", label: "Perfumes" },
+            { href: "skincare.html", label: "Skin Care" },
+            { href: "about.html",    label: "About" },
+            { href: "contact.html",  label: "Contact" },
+        ];
 
-        // Links wrapper
-        const linksWrapper = document.createElement("ul");
-        linksWrapper.className = "nav-menu-links";
-        existingItems.forEach(li => linksWrapper.appendChild(li));
-        navMenu.appendChild(linksWrapper);
+        const linksHTML = pages.map(p => {
+            const isActive = activePath === p.href || (activePath === "" && p.href === "index.html");
+            return `<li><a href="${p.href}" class="nav-link${isActive ? " active" : ""}">${p.label}</a></li>`;
+        }).join("");
 
-        // WhatsApp footer
-        const menuFooter = document.createElement("div");
-        menuFooter.className = "nav-menu-footer";
-        menuFooter.innerHTML = `
-            <p>ZAYNOR Premium Grooming</p>
-            <a href="https://wa.me/${CONFIG.whatsappNumber}" target="_blank" class="nav-wa-link" rel="noopener noreferrer">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.333 4.993L2 22l5.13-1.347a9.96 9.96 0 004.887 1.28h.005c5.505 0 9.988-4.478 9.989-9.985 0-2.67-1.037-5.18-2.92-7.065A9.925 9.925 0 0012.012 2zm5.836 14.166c-.32.902-1.854 1.764-2.556 1.87-.62.093-1.428.167-3.953-.878-3.23-1.336-5.307-4.636-5.468-4.85-.162-.216-1.309-1.742-1.309-3.324 0-1.583.826-2.36 1.118-2.667.29-.307.64-.384.85-.384.214 0 .429.002.617.01.196.009.46-.073.722.56.268.647.915 2.233.996 2.395.08.162.133.35.026.565-.107.214-.16.347-.32.532-.162.185-.34.409-.485.55-.16.155-.328.324-.143.642.185.318.824 1.354 1.766 2.195 1.21 1.08 2.227 1.414 2.549 1.575.322.161.51.134.7-.082.19-.217.825-.96.105-1.285-.246-.108-.396-.188-1.578-.667-.322-.132-.538-.066-.7.13-.16.195-.627.785-.77 0-.142-.785-.286-1.547-.63-.162-.317-.324-.633-.143-.951z"/>
-                </svg>
-                Order on WhatsApp
-            </a>`;
-        navMenu.appendChild(menuFooter);
+        drawer.innerHTML = `
+            <div class="drawer-header">
+                <span class="drawer-brand">ZAYNOR<span>.</span></span>
+                <button class="drawer-close" aria-label="Close menu" id="drawerCloseBtn">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+            <ul class="drawer-links">${linksHTML}</ul>
+            <div class="drawer-footer">
+                <p>ZAYNOR Premium Grooming</p>
+                <a href="https://wa.me/${CONFIG.whatsappNumber}" target="_blank" rel="noopener noreferrer" class="drawer-wa-link">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.333 4.993L2 22l5.13-1.347a9.96 9.96 0 004.887 1.28h.005c5.505 0 9.988-4.478 9.989-9.985 0-2.67-1.037-5.18-2.92-7.065A9.925 9.925 0 0012.012 2zm5.836 14.166c-.32.902-1.854 1.764-2.556 1.87-.62.093-1.428.167-3.953-.878-3.23-1.336-5.307-4.636-5.468-4.85-.162-.216-1.309-1.742-1.309-3.324 0-1.583.826-2.36 1.118-2.667.29-.307.64-.384.85-.384.214 0 .429.002.617.01.196.009.46-.073.722.56.268.647.915 2.233.996 2.395.08.162.133.35.026.565-.107.214-.16.347-.32.532-.162.185-.34.409-.485.55-.16.155-.328.324-.143.642.185.318.824 1.354 1.766 2.195 1.21 1.08 2.227 1.414 2.549 1.575.322.161.51.134.7-.082.19-.217.825-.96.105-1.285-.246-.108-.396-.188-1.578-.667-.322-.132-.538-.066-.7.13-.16.195-.627.785-.77 0-.142-.785-.286-1.547-.63-.162-.317-.324-.633-.143-.951z"/>
+                    </svg>
+                    Order on WhatsApp
+                </a>
+            </div>`;
 
-        // ── Helper: open / close drawer ───────────────────────────────────
-        const openMenu = () => {
-            navMenu.classList.add("open");
+        document.body.appendChild(drawer);
+
+        // ── 3. Open / close helpers ───────────────────────────────────────
+        const openDrawer = () => {
+            drawer.classList.add("open");
             overlay.classList.add("active");
             navToggle.setAttribute("aria-expanded", "true");
-            document.body.style.overflow = "hidden"; // prevent bg scroll
+            navToggle.style.opacity = "0";          // hide hamburger while drawer is open
+            navToggle.style.pointerEvents = "none";
+            document.body.style.overflow = "hidden";
         };
 
-        const closeMenu = () => {
-            navMenu.classList.remove("open");
+        const closeDrawer = () => {
+            drawer.classList.remove("open");
             overlay.classList.remove("active");
             navToggle.setAttribute("aria-expanded", "false");
+            navToggle.style.opacity = "1";          // restore hamburger
+            navToggle.style.pointerEvents = "";
             document.body.style.overflow = "";
         };
 
-        // ── Hamburger toggles open ────────────────────────────────────────
+        // ── 4. Wire up events ─────────────────────────────────────────────
         navToggle.addEventListener("click", () => {
-            const isOpen = navMenu.classList.contains("open");
-            isOpen ? closeMenu() : openMenu();
+            drawer.classList.contains("open") ? closeDrawer() : openDrawer();
         });
 
-        // ── Close button inside drawer ────────────────────────────────────
-        menuHeader.querySelector(".nav-menu-close").addEventListener("click", closeMenu);
+        drawer.querySelector("#drawerCloseBtn").addEventListener("click", closeDrawer);
+        overlay.addEventListener("click", closeDrawer);
 
-        // ── Overlay click closes drawer ───────────────────────────────────
-        overlay.addEventListener("click", closeMenu);
-
-        // ── ESC key closes drawer ─────────────────────────────────────────
-        document.addEventListener("keydown", (e) => {
-            if (e.key === "Escape" && navMenu.classList.contains("open")) {
-                closeMenu();
-            }
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape" && drawer.classList.contains("open")) closeDrawer();
         });
 
-        // ── Nav link click closes drawer ──────────────────────────────────
-        navMenu.addEventListener("click", (e) => {
-            if (e.target.classList.contains("nav-link")) {
-                closeMenu();
-            }
+        // Close on any nav link tap
+        drawer.querySelectorAll(".nav-link").forEach(link => {
+            link.addEventListener("click", closeDrawer);
         });
     }
 
