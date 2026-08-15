@@ -452,3 +452,45 @@ function showToast(message) {
         }, 400);
     }, 3500);
 }
+
+/**
+ * Inject and initialize the Scroll-to-Top button (injected via JS so it works on every page)
+ */
+(function initScrollTop() {
+    const btn = document.createElement("button");
+    btn.className = "scroll-top";
+    btn.setAttribute("aria-label", "Scroll back to top");
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>`;
+    document.body.appendChild(btn);
+
+    window.addEventListener("scroll", () => {
+        if (window.scrollY > 400) {
+            btn.classList.add("visible");
+        } else {
+            btn.classList.remove("visible");
+        }
+    });
+
+    btn.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+})();
+
+/**
+ * Inject a floating WhatsApp CTA button on every page
+ */
+(function initWhatsAppFloat() {
+    const link = document.createElement("a");
+    link.className = "whatsapp-float";
+    link.href = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent("Assalam-o-Alaikum ZAYNOR! I'd like to know more about your products.")}`;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.setAttribute("aria-label", "Chat with us on WhatsApp");
+    link.innerHTML = `
+        <svg viewBox="0 0 24 24">
+            <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.333 4.993L2 22l5.13-1.347a9.96 9.96 0 004.887 1.28h.005c5.505 0 9.988-4.478 9.989-9.985 0-2.67-1.037-5.18-2.92-7.065A9.925 9.925 0 0012.012 2zm5.836 14.166c-.32.902-1.854 1.764-2.556 1.87-.62.093-1.428.167-3.953-.878-3.23-1.336-5.307-4.636-5.468-4.85-.162-.216-1.309-1.742-1.309-3.324 0-1.583.826-2.36 1.118-2.667.29-.307.64-.384.85-.384.214 0 .429.002.617.01.196.009.46-.073.722.56.268.647.915 2.233.996 2.395.08.162.133.35.026.565-.107.214-.16.347-.32.532-.162.185-.34.409-.485.55-.16.155-.328.324-.143.642.185.318.824 1.354 1.766 2.195 1.21 1.08 2.227 1.414 2.549 1.575.322.161.51.134.7-.082.19-.217.825-.96.105-1.285-.246-.108-.396-.188-1.578-.667-.322-.132-.538-.066-.7.13-.16.195-.627.785-.77 0-.142-.785-.286-1.547-.63-.162-.317-.324-.633-.143-.951z"/>
+        </svg>
+    `;
+    document.body.appendChild(link);
+})();
+

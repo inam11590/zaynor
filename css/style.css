@@ -1229,3 +1229,147 @@ textarea.form-control {
     font-size: 0.85rem;
     font-weight: 500;
 }
+
+/* ==========================================================================
+   Scroll To Top Button
+   ========================================================================== */
+.scroll-top {
+    position: fixed;
+    bottom: 90px;
+    right: 30px;
+    width: 44px;
+    height: 44px;
+    background-color: var(--gold-primary);
+    color: var(--text-dark);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    z-index: 1500;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: var(--transition-normal);
+    pointer-events: none;
+}
+
+.scroll-top.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
+
+.scroll-top:hover {
+    background-color: var(--gold-accent);
+    transform: translateY(-3px);
+}
+
+/* ==========================================================================
+   Floating WhatsApp CTA Button
+   ========================================================================== */
+.whatsapp-float {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1500;
+    width: 54px;
+    height: 54px;
+    background-color: #25d366;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 20px rgba(37, 211, 102, 0.4);
+    transition: var(--transition-normal);
+    animation: pulse-whatsapp 2s infinite 3s;
+}
+
+.whatsapp-float svg {
+    width: 28px;
+    height: 28px;
+    fill: #fff;
+}
+
+.whatsapp-float:hover {
+    background-color: #20ba5a;
+    transform: scale(1.12);
+    box-shadow: 0 8px 28px rgba(37, 211, 102, 0.5);
+}
+
+@keyframes pulse-whatsapp {
+    0%   { box-shadow: 0 5px 20px rgba(37,211,102,0.4); }
+    50%  { box-shadow: 0 5px 30px rgba(37,211,102,0.65), 0 0 0 10px rgba(37,211,102,0.08); }
+    100% { box-shadow: 0 5px 20px rgba(37,211,102,0.4); }
+}
+
+/* ==========================================================================
+   Gold Divider Ornament
+   ========================================================================== */
+.divider-ornament {
+    text-align: center;
+    margin: 0 auto 3rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: 300px;
+}
+
+.divider-ornament::before,
+.divider-ornament::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+}
+
+.divider-ornament span {
+    color: var(--gold-primary);
+    font-size: 1rem;
+}
+
+/* ==========================================================================
+   Shimmer / Skeleton Loading
+   ========================================================================== */
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+.text-gold { color: var(--gold-primary); }
+.text-center { text-align: center; }
+.mt-1 { margin-top: 1rem; }
+.mt-2 { margin-top: 2rem; }
+.mb-1 { margin-bottom: 1rem; }
+.mb-2 { margin-bottom: 2rem; }
+.hidden { display: none !important; }
+
+/* ==========================================================================
+   Page Fade-In Entry Animation
+   ========================================================================== */
+@keyframes pageFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+main, .page-header {
+    animation: pageFadeIn 0.6s ease-out forwards;
+}
+
+/* ==========================================================================
+   Focus Visible Accessibility Outlines
+   ========================================================================== */
+:focus-visible {
+    outline: 2px solid var(--gold-primary);
+    outline-offset: 3px;
+}
+
