@@ -327,11 +327,13 @@ img {
     transition: var(--transition-fast);
 }
 
-/* ==========================================================================
-   Mobile Nav Overlay Backdrop
-   ========================================================================== */
+/* Default: Mobile Drawer & Overlay are COMPLETELY HIDDEN on Desktop screens (>768px) */
+.mobile-drawer {
+    display: none !important;
+}
+
 .nav-overlay {
-    display: none;
+    display: none !important;
     position: fixed;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.65);
@@ -342,28 +344,30 @@ img {
     transition: opacity 0.35s ease;
 }
 
-.nav-overlay.active {
-    display: block;
-    opacity: 1;
-}
-
 /* ==========================================================================
    Mobile Nav Drawer  (only activated on ≤ 768 px)
    ========================================================================== */
 @media (max-width: 768px) {
 
-    /* Show hamburger button */
+    /* Show hamburger button on mobile only */
     .nav-toggle {
-        display: flex;
+        display: flex !important;
     }
 
-    /* Hide desktop nav links — the drawer shows them instead */
+    /* Hide desktop nav links on mobile — the drawer handles them */
     .nav-menu {
-        display: none;
+        display: none !important;
+    }
+
+    /* Show overlay on mobile when active */
+    .nav-overlay.active {
+        display: block !important;
+        opacity: 1;
     }
 
     /* ── Drawer panel ─────────────────────────────────────────────────────── */
     .mobile-drawer {
+        display: flex !important;
         position: fixed;
         top: 0;
         right: -110%;
@@ -371,7 +375,6 @@ img {
         width: 80%;
         max-width: 320px;
         background-color: #0d0d10;
-        display: flex;
         flex-direction: column;
         border-left: 1px solid var(--gold-primary);
         box-shadow: -15px 0 50px rgba(0, 0, 0, 0.85);
@@ -1418,7 +1421,7 @@ textarea.form-control {
 }
 
 /* ==========================================================================
-   Floating WhatsApp CTA Button
+   Floating WhatsApp CTA Button (Desktop & Mobile)
    ========================================================================== */
 .whatsapp-float {
     position: fixed;
@@ -1445,8 +1448,25 @@ textarea.form-control {
 
 .whatsapp-float:hover {
     background-color: #20ba5a;
-    transform: scale(1.12);
+    transform: scale(1.1);
     box-shadow: 0 8px 28px rgba(37, 211, 102, 0.5);
+}
+
+@media (max-width: 768px) {
+    .whatsapp-float {
+        bottom: 24px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+    }
+    .whatsapp-float svg {
+        width: 25px;
+        height: 25px;
+    }
+    .scroll-top {
+        bottom: 86px;
+        right: 20px;
+    }
 }
 
 @keyframes pulse-whatsapp {
