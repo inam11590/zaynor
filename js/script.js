@@ -5,7 +5,7 @@
 
 // Global Configuration
 const CONFIG = {
-    whatsappNumber: "923000000000", // Replace with your real Pakistani WhatsApp number (e.g., "923XXXXXXXXX")
+    whatsappNumber: "923185868241", // Replace with your real Pakistani WhatsApp number (e.g., "923XXXXXXXXX")
     brandName: "ZAYNOR"
 };
 

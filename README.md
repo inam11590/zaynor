@@ -48,7 +48,7 @@ zaynor-ecommerce/
 Open `js/script.js` and edit line 8:
 ```js
 const CONFIG = {
-    whatsappNumber: "923084111590",  // ← Replace with your real number (92 + number without 0)
+    whatsappNumber: "923185868241",  // ← Replace with your real number (92 + number without 0)
     brandName: "ZAYNOR"
 };
 ```
@@ -155,7 +155,7 @@ No cart or payment system. Every product has an **"Order on WhatsApp"** button t
 
 ## 📞 Support
 
-Replace with your actual support contact in the files. The placeholder WhatsApp number is `923084111590`.
+Replace with your actual support contact in the files. The placeholder WhatsApp number is `923185868241`.
 
 ---
 
