@@ -6,10 +6,25 @@
 // Global Configuration
 const CONFIG = {
     whatsappNumber: "923185868241", // Replace with your real Pakistani WhatsApp number (e.g., "923XXXXXXXXX")
-    brandName: "ZAYNOR"
+    brandName: "ZAYNOR",
+    // Backend API base URL. Set to "" or comment out to disable API and use hardcoded data only.
+    apiBaseUrl: "http://127.0.0.1:8000/api/v1"
 };
 
-// Product Database
+// Category ID → slug mapping (matches backend database IDs)
+const CATEGORY_ID_MAP = { 1: "perfumes", 2: "skincare" };
+
+// Wishlist session key — persists across visits
+function getWishlistSessionKey() {
+    let key = localStorage.getItem("zaynor_session");
+    if (!key) {
+        key = "sess_" + Math.random().toString(36).substring(2) + Date.now().toString(36);
+        localStorage.setItem("zaynor_session", key);
+    }
+    return key;
+}
+
+// Product Database (hardcoded fallback — used when API is unavailable)
 const PRODUCTS = {
     perfumes: [
         {
@@ -185,6 +200,69 @@ const PRODUCTS = {
     ]
 };
 
+/**
+ * Fetches products from the backend API and returns a PRODUCTS-compatible object.
+ * Returns null if the API is unavailable.
+ *
+ * Flow:
+ *   1. GET /api/v1/products/ → get list of all products (summary)
+ *   2. For each product, GET /api/v1/products/{slug} → get full details
+ *   3. Map API data to the format the frontend expects
+ *   4. Organize by category slug
+ */
+async function fetchProductsFromAPI() {
+    if (!CONFIG.apiBaseUrl) return null;
+
+    try {
+        // Step 1: Get the product list
+        const listRes = await fetch(`${CONFIG.apiBaseUrl}/products/`);
+        if (!listRes.ok) return null;
+        const summaryList = await listRes.json();
+
+        // Step 2: Fetch full details for each product
+        const fullProducts = await Promise.all(
+            summaryList.map(async (summary) => {
+                try {
+                    const res = await fetch(`${CONFIG.apiBaseUrl}/products/${summary.slug}`);
+                    if (!res.ok) return null;
+                    return await res.json();
+                } catch {
+                    return null;
+                }
+            })
+        );
+
+        // Step 3: Filter out any failures and map to frontend format
+        const valid = fullProducts.filter(Boolean);
+        if (valid.length === 0) return null;
+
+        const result = { perfumes: [], skincare: [] };
+
+        valid.forEach((p) => {
+            const slug = CATEGORY_ID_MAP[p.category_id] || "perfumes";
+            const mapped = {
+                id: p.slug,                         // use slug as the frontend ID
+                backendId: p.id,                    // numeric ID for reviews API
+                name: p.name,
+                price: p.price,
+                image: p.image,
+                shortDescription: p.short_description,
+                description: p.description,
+                specs: p.specs || {}
+            };
+
+            if (result[slug]) {
+                result[slug].push(mapped);
+            }
+        });
+
+        return result;
+    } catch (err) {
+        // API is unreachable — fall back to hardcoded data
+        return null;
+    }
+}
+
 // Document Ready
 document.addEventListener("DOMContentLoaded", () => {
     // 1. Sticky Navigation Scroll Handler
@@ -220,8 +298,10 @@ document.addEventListener("DOMContentLoaded", () => {
             { href: "index.html",    label: "Home" },
             { href: "perfumes.html", label: "Perfumes" },
             { href: "skincare.html", label: "Skin Care" },
+            { href: "wishlist.html", label: "Wishlist" },
             { href: "about.html",    label: "About" },
             { href: "contact.html",  label: "Contact" },
+            { href: "tracking.html", label: "Track Order" },
         ];
 
         const linksHTML = pages.map(p => {
@@ -290,6 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // 3. Dynamic Products Grid Initialization (if container is present on page)
+    //    Tries the backend API first; falls back to hardcoded PRODUCTS on failure.
     initProductGrids();
 
     // 4. Modal Setup & Events
@@ -300,37 +381,53 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 6. Newsletter Subscription
     initNewsletterForm();
+
+    // 7. Load wishlist heart states
+    refreshWishlistHearts();
 });
 
 /**
- * Initializes and dynamically loads products to perfume and skincare pages
+ * Initializes and dynamically loads products to perfume and skincare pages.
+ * Tries the backend API first; falls back to hardcoded PRODUCTS on failure.
  */
 function initProductGrids() {
     const perfumeGrid = document.getElementById("perfumes-grid");
     const skincareGrid = document.getElementById("skincare-grid");
     const featuredGrid = document.getElementById("featured-grid");
 
-    // Populate Perfume Page
-    if (perfumeGrid) {
-        perfumeGrid.innerHTML = PRODUCTS.perfumes.map(p => generateProductCardHTML(p, "perfumes")).join("");
+    // No product grids on this page — nothing to do
+    if (!perfumeGrid && !skincareGrid && !featuredGrid) return;
+
+    // Helper: render grids from a PRODUCTS-compatible object
+    function renderFromProducts(products) {
+        if (perfumeGrid) {
+            perfumeGrid.innerHTML = products.perfumes.map(p => generateProductCardHTML(p, "perfumes")).join("");
+        }
+        if (skincareGrid) {
+            skincareGrid.innerHTML = products.skincare.map(p => generateProductCardHTML(p, "skincare")).join("");
+        }
+        if (featuredGrid) {
+            const featuredList = [
+                { ...products.perfumes[0], cat: "perfumes", badge: "Best Seller" },
+                { ...products.skincare[0], cat: "skincare", badge: "New Arrival" },
+                { ...products.perfumes[1], cat: "perfumes", badge: "Premium Choice" },
+                { ...products.skincare[1], cat: "skincare", badge: "Must Have" }
+            ];
+            featuredGrid.innerHTML = featuredList.map(p => generateProductCardHTML(p, p.cat, p.badge)).join("");
+        }
     }
 
-    // Populate Skincare Page
-    if (skincareGrid) {
-        skincareGrid.innerHTML = PRODUCTS.skincare.map(p => generateProductCardHTML(p, "skincare")).join("");
-    }
-
-    // Populate Featured Products on Home Page (take first 2 from perfumes, first 2 from skincare)
-    if (featuredGrid) {
-        const featuredList = [
-            { ...PRODUCTS.perfumes[0], cat: "perfumes", badge: "Best Seller" },
-            { ...PRODUCTS.skincare[0], cat: "skincare", badge: "New Arrival" },
-            { ...PRODUCTS.perfumes[1], cat: "perfumes", badge: "Premium Choice" },
-            { ...PRODUCTS.skincare[1], cat: "skincare", badge: "Must Have" }
-        ];
-        
-        featuredGrid.innerHTML = featuredList.map(p => generateProductCardHTML(p, p.cat, p.badge)).join("");
-    }
+    // Try API first, fall back to hardcoded PRODUCTS
+    fetchProductsFromAPI().then(apiProducts => {
+        if (apiProducts && (apiProducts.perfumes.length > 0 || apiProducts.skincare.length > 0)) {
+            // Store API products globally so the modal can look them up
+            window._API_PRODUCTS = apiProducts;
+            renderFromProducts(apiProducts);
+        } else {
+            // API unavailable — use hardcoded data
+            renderFromProducts(PRODUCTS);
+        }
+    });
 }
 
 /**
@@ -345,6 +442,7 @@ function generateProductCardHTML(product, category, badge = "") {
             <div class="product-image-container" onclick="openProductModal('${product.id}', '${category}')">
                 ${badgeHTML}
                 <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
+                <button class="wishlist-heart" data-slug="${product.id}" onclick="event.stopPropagation(); toggleWishlist('${product.id}', this);" aria-label="Add to wishlist">&#9825;</button>
                 <div class="product-quickview">Quick View</div>
             </div>
             <div class="product-details">
@@ -369,10 +467,176 @@ function generateProductCardHTML(product, category, badge = "") {
 /**
  * Returns formatted WhatsApp wa.me link for a product order
  */
-function getWhatsAppOrderLink(product) {
+function getWhatsAppOrderLink(product, coupon) {
     const formattedPrice = Number(product.price).toLocaleString("en-PK");
-    const textMessage = `Assalam-o-Alaikum ${CONFIG.brandName},\n\nI would like to order the following product:\n\n*Product Name:* ${product.name}\n*Price:* Rs. ${formattedPrice}\n\nPlease let me know the details to confirm my order. Thank you!`;
+    let textMessage = `Assalam-o-Alaikum ${CONFIG.brandName},\n\nI would like to order the following product:\n\n*Product Name:* ${product.name}\n*Price:* Rs. ${formattedPrice}`;
+    if (coupon && coupon.valid) {
+        textMessage += `\n\n*Coupon:* ${coupon.code} (${coupon.discount_percent}% off)`;
+        textMessage += `\n*Discount:* Rs. ${coupon.discount_amount.toLocaleString("en-PK")}`;
+        textMessage += `\n*Final Price:* Rs. ${coupon.final_amount.toLocaleString("en-PK")}`;
+    }
+    textMessage += `\n\nPlease let me know the details to confirm my order. Thank you!`;
     return `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(textMessage)}`;
+}
+
+/**
+ * Apply a coupon code to the current modal product.
+ */
+function applyCoupon(product, code, msgEl) {
+    if (!code) { msgEl.style.color = "#e74c3c"; msgEl.textContent = "Please enter a coupon code."; return; }
+    if (!CONFIG.apiBaseUrl) { msgEl.style.color = "#e74c3c"; msgEl.textContent = "API unavailable."; return; }
+
+    msgEl.style.color = "var(--text-secondary)";
+    msgEl.textContent = "Checking...";
+
+    fetch(`${CONFIG.apiBaseUrl}/coupons/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code.toUpperCase(), order_amount: product.price })
+    })
+    .then(r => { if (!r.ok) throw new Error("not found"); return r.json(); })
+    .then(data => {
+        const modal = document.getElementById("product-modal");
+        if (data.valid) {
+            msgEl.style.color = "#2ecc71";
+            msgEl.textContent = data.message + ` — You save Rs. ${data.discount_amount.toLocaleString("en-PK")}`;
+            modal.querySelector(".modal-price").innerHTML =
+                `<span style="text-decoration:line-through;color:var(--text-secondary);font-size:0.9em;">Rs. ${Number(product.price).toLocaleString("en-PK")}</span> ` +
+                `<span style="color:#2ecc71;">Rs. ${data.final_amount.toLocaleString("en-PK")}</span>`;
+            modal._appliedCoupon = data;
+            // Update WhatsApp link with coupon
+            modal.querySelector(".modal-order-btn").href = getWhatsAppOrderLink(product, data);
+        } else {
+            msgEl.style.color = "#e74c3c";
+            msgEl.textContent = data.message;
+            modal._appliedCoupon = null;
+            modal.querySelector(".modal-price").innerText = `Rs. ${Number(product.price).toLocaleString("en-PK")}`;
+            modal.querySelector(".modal-order-btn").href = getWhatsAppOrderLink(product, null);
+        }
+    })
+    .catch(() => {
+        msgEl.style.color = "#e74c3c";
+        msgEl.textContent = "Coupon not found.";
+    });
+}
+
+/**
+ * Fetches and renders reviews for a product in the modal.
+ */
+function loadReviews(productId, container) {
+    const apiBase = CONFIG.apiBaseUrl;
+    if (!apiBase) { container.innerHTML = ""; return; }
+
+    // Fetch summary + reviews in parallel
+    Promise.all([
+        fetch(`${apiBase}/reviews/summary?product_id=${productId}`).then(r => r.ok ? r.json() : null),
+        fetch(`${apiBase}/reviews/?product_id=${productId}`).then(r => r.ok ? r.json() : null)
+    ]).then(([summary, reviews]) => {
+        let html = '';
+
+        // Rating summary
+        if (summary && summary.review_count > 0) {
+            const stars = renderStars(summary.average_rating);
+            html += `<div class="reviews-summary" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+                <span style="font-size:1.5rem;font-weight:700;color:var(--gold-primary);">${summary.average_rating}</span>
+                <span>${stars}</span>
+                <span style="color:var(--text-secondary);font-size:0.85rem;">(${summary.review_count} review${summary.review_count !== 1 ? 's' : ''})</span>
+            </div>`;
+        }
+
+        // Reviews list
+        if (reviews && reviews.length > 0) {
+            html += '<div class="reviews-list">';
+            reviews.forEach(r => {
+                const date = new Date(r.created_at).toLocaleDateString();
+                html += `<div style="border-top:1px solid var(--border-light);padding:0.75rem 0;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+                        <strong style="color:var(--text-primary);font-size:0.9rem;">${escHTML(r.customer_name)}</strong>
+                        <span style="color:var(--text-secondary);font-size:0.75rem;">${date}</span>
+                    </div>
+                    <div style="margin-bottom:0.25rem;">${renderStars(r.rating)}</div>
+                    ${r.comment ? `<p style="color:var(--text-secondary);font-size:0.85rem;margin:0;">${escHTML(r.comment)}</p>` : ''}
+                </div>`;
+            });
+            html += '</div>';
+        }
+
+        // Review form
+        html += `<div style="border-top:1px solid var(--border-light);padding-top:1rem;margin-top:0.75rem;">
+            <h4 style="font-family:var(--font-heading);font-size:1rem;color:var(--text-primary);margin-bottom:0.75rem;">Write a Review</h4>
+            <form id="review-form" style="display:flex;flex-direction:column;gap:0.75rem;">
+                <input type="text" id="review-name" placeholder="Your name" required style="padding:0.5rem 0.75rem;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:6px;color:var(--text-primary);font-family:var(--font-body);font-size:0.85rem;">
+                <select id="review-rating" required style="padding:0.5rem 0.75rem;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:6px;color:var(--text-primary);font-family:var(--font-body);font-size:0.85rem;">
+                    <option value="">Rate this product</option>
+                    <option value="5">5 - Excellent</option>
+                    <option value="4">4 - Very Good</option>
+                    <option value="3">3 - Good</option>
+                    <option value="2">2 - Fair</option>
+                    <option value="1">1 - Poor</option>
+                </select>
+                <textarea id="review-comment" rows="2" placeholder="Your review (optional)" style="padding:0.5rem 0.75rem;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:6px;color:var(--text-primary);font-family:var(--font-body);font-size:0.85rem;resize:vertical;"></textarea>
+                <div id="review-form-msg" style="font-size:0.8rem;"></div>
+                <button type="submit" class="btn btn-primary btn-small" style="align-self:flex-start;">Submit Review</button>
+            </form>
+        </div>`;
+
+        container.innerHTML = html;
+
+        // Bind review form submission
+        const form = container.querySelector('#review-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitReview(productId, container);
+            });
+        }
+    }).catch(() => {
+        container.innerHTML = "";
+    });
+}
+
+function renderStars(rating) {
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+        html += i <= Math.round(rating)
+            ? '<span style="color:#f1c40f;font-size:0.9rem;">&#9733;</span>'
+            : '<span style="color:var(--border-light);font-size:0.9rem;">&#9733;</span>';
+    }
+    return html;
+}
+
+function escHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+}
+
+function submitReview(productId, container) {
+    const name = document.getElementById('review-name').value.trim();
+    const rating = document.getElementById('review-rating').value;
+    const comment = document.getElementById('review-comment').value.trim();
+    const msgEl = document.getElementById('review-form-msg');
+
+    if (!name || !rating) {
+        msgEl.style.color = '#e74c3c';
+        msgEl.textContent = 'Please enter your name and select a rating.';
+        return;
+    }
+
+    const apiBase = CONFIG.apiBaseUrl;
+    fetch(`${apiBase}/reviews/?product_id=${productId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customer_name: name, rating: parseInt(rating), comment: comment || null })
+    }).then(r => {
+        if (!r.ok) throw new Error('Failed');
+        msgEl.style.color = '#2ecc71';
+        msgEl.textContent = 'Thank you for your review!';
+        loadReviews(productId, container);
+    }).catch(() => {
+        msgEl.style.color = '#e74c3c';
+        msgEl.textContent = 'Could not submit review. Try again.';
+    });
 }
 
 /**
@@ -406,7 +670,12 @@ function initModal() {
 
     // Attach to global window object so it can be called from inline onclick events
     window.openProductModal = (productId, category) => {
-        const productList = PRODUCTS[category];
+        // Prefer API products if available, otherwise use hardcoded
+        const source = (window._API_PRODUCTS && window._API_PRODUCTS[category])
+            ? window._API_PRODUCTS
+            : PRODUCTS;
+
+        const productList = source[category];
         if (!productList) return;
 
         const product = productList.find(p => p.id === productId);
@@ -429,9 +698,68 @@ function initModal() {
             </div>
         `).join("");
 
+        // Coupon section — inject if not already present
+        let couponSection = modal.querySelector(".modal-coupon");
+        if (!couponSection) {
+            couponSection = document.createElement("div");
+            couponSection.className = "modal-coupon";
+            const specGridInner = modal.querySelector(".modal-spec-grid");
+            specGridInner.parentNode.insertBefore(couponSection, specGridInner.nextSibling);
+        }
+        couponSection.innerHTML = `
+            <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+                <input type="text" id="coupon-input" placeholder="Have a coupon code?" style="flex:1;padding:0.5rem 0.75rem;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:6px;color:var(--text-primary);font-family:var(--font-body);font-size:0.85rem;text-transform:uppercase;">
+                <button id="coupon-apply-btn" class="btn btn-outline btn-small" style="white-space:nowrap;">Apply</button>
+            </div>
+            <div id="coupon-msg" style="font-size:0.8rem;margin-top:0.4rem;"></div>
+        `;
+
+        const couponApplyBtn = couponSection.querySelector("#coupon-apply-btn");
+        const couponInput = couponSection.querySelector("#coupon-input");
+        const couponMsg = couponSection.querySelector("#coupon-msg");
+        couponApplyBtn.addEventListener("click", function () {
+            applyCoupon(product, couponInput.value.trim(), couponMsg);
+        });
+        couponInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") { e.preventDefault(); applyCoupon(product, couponInput.value.trim(), couponMsg); }
+        });
+        // Reset any previous coupon state
+        modal._appliedCoupon = null;
+        modal.querySelector(".modal-price").innerText = `Rs. ${Number(product.price).toLocaleString("en-PK")}`;
+
         // WhatsApp CTA Config
         const orderButton = modal.querySelector(".modal-order-btn");
         orderButton.href = getWhatsAppOrderLink(product);
+
+        // Wishlist button in modal
+        let wishlistBtn = modal.querySelector(".modal-wishlist-btn");
+        if (!wishlistBtn) {
+            wishlistBtn = document.createElement("button");
+            wishlistBtn.className = "btn btn-outline btn-small modal-wishlist-btn";
+            wishlistBtn.style.marginTop = "0.75rem";
+            wishlistBtn.style.width = "100%";
+            wishlistBtn.style.textAlign = "center";
+            orderButton.parentNode.insertBefore(wishlistBtn, orderButton.nextSibling);
+        }
+        wishlistBtn.setAttribute("data-slug", product.id);
+        checkWishlistStatus(product.id, wishlistBtn);
+
+        // Reviews Section — inject if not already present
+        let reviewsSection = modal.querySelector(".modal-reviews");
+        if (!reviewsSection) {
+            reviewsSection = document.createElement("div");
+            reviewsSection.className = "modal-reviews";
+            const specGrid = modal.querySelector(".modal-spec-grid");
+            specGrid.parentNode.insertBefore(reviewsSection, specGrid.nextSibling);
+        }
+
+        // Load reviews from API if backendId is available
+        if (product.backendId && CONFIG.apiBaseUrl) {
+            reviewsSection.innerHTML = '<p style="color:var(--text-secondary);font-size:0.85rem;">Loading reviews...</p>';
+            loadReviews(product.backendId, reviewsSection);
+        } else {
+            reviewsSection.innerHTML = "";
+        }
 
         // Open animation
         modal.style.display = "flex";
@@ -523,6 +851,83 @@ function showToast(message) {
             toast.remove();
         }, 400);
     }, 3500);
+}
+
+/**
+ * Toggle a product in the wishlist (add/remove).
+ */
+function toggleWishlist(slug, btnEl) {
+    const apiBase = CONFIG.apiBaseUrl;
+    if (!apiBase) return;
+
+    const sessionKey = getWishlistSessionKey();
+    const isInWishlist = btnEl.classList.contains("active");
+
+    if (isInWishlist) {
+        fetch(`${apiBase}/wishlist/${encodeURIComponent(slug)}?session_key=${encodeURIComponent(sessionKey)}`, { method: "DELETE" })
+            .then(() => {
+                btnEl.classList.remove("active");
+                btnEl.innerHTML = "&#9825;";
+                showToast("Removed from wishlist");
+            });
+    } else {
+        fetch(`${apiBase}/wishlist/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_key: sessionKey, product_slug: slug })
+        })
+        .then(r => r.ok ? r.json() : null)
+        .then(() => {
+            btnEl.classList.add("active");
+            btnEl.innerHTML = "&#9829;";
+            showToast("Added to wishlist!");
+        });
+    }
+}
+
+/**
+ * Check if a product is in the wishlist and update button state.
+ */
+function checkWishlistStatus(slug, btnEl) {
+    const apiBase = CONFIG.apiBaseUrl;
+    if (!apiBase) return;
+
+    const sessionKey = getWishlistSessionKey();
+    fetch(`${apiBase}/wishlist/check?session_key=${encodeURIComponent(sessionKey)}&product_slug=${encodeURIComponent(slug)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+            if (data && data.in_wishlist) {
+                btnEl.classList.add("active");
+                btnEl.innerHTML = "&#9829;";
+            } else {
+                btnEl.classList.remove("active");
+                btnEl.innerHTML = "&#9825;";
+            }
+            btnEl.onclick = function(e) { e.stopPropagation(); toggleWishlist(slug, btnEl); };
+        });
+}
+
+/**
+ * Load and update all wishlist heart buttons on the page.
+ */
+function refreshWishlistHearts() {
+    const apiBase = CONFIG.apiBaseUrl;
+    if (!apiBase) return;
+
+    const sessionKey = getWishlistSessionKey();
+    fetch(`${apiBase}/wishlist/?session_key=${encodeURIComponent(sessionKey)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(items => {
+            if (!items) return;
+            const slugs = new Set(items.map(i => i.product_slug));
+            document.querySelectorAll(".wishlist-heart").forEach(btn => {
+                const slug = btn.getAttribute("data-slug");
+                if (slugs.has(slug)) {
+                    btn.classList.add("active");
+                    btn.innerHTML = "&#9829;";
+                }
+            });
+        });
 }
 
 /**

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZAYNOR Admin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="admin-login">
+        <div class="login-card">
+            <h1 class="login-logo">ZAYNOR<span>.</span></h1>
+            <p class="login-subtitle">Admin Dashboard</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required autocomplete="email" placeholder="admin@zaynor.com">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required autocomplete="current-password" placeholder="Password">
+                </div>
+                <div id="login-error" class="form-error hidden"></div>
+                <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard (hidden until logged in) -->
+    <div id="dashboard" class="admin-dashboard hidden">
+        <!-- Top bar -->
+        <header class="admin-header">
+            <a href="index.html" class="logo admin-logo-text">ZAYNOR<span>.</span></a>
+            <nav class="admin-nav">
+                <button class="admin-tab active" data-tab="products">Products</button>
+                <button class="admin-tab" data-tab="orders">Orders</button>
+                <button class="admin-tab" data-tab="customers">Customers</button>
+            </nav>
+            <div class="admin-header-right">
+                <span id="admin-email" class="admin-user-info"></span>
+                <button id="logout-btn" class="btn btn-outline btn-small">Logout</button>
+            </div>
+        </header>
+
+        <!-- ===== Products Tab ===== -->
+        <section id="tab-products" class="admin-tab-content active">
+            <div class="admin-toolbar">
+                <h2>Products</h2>
+                <button id="btn-add-product" class="btn btn-primary btn-small">+ Add Product</button>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Slug</th>
+                            <th>Price (PKR)</th>
+                            <th>Category</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="products-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== Orders Tab ===== -->
+        <section id="tab-orders" class="admin-tab-content">
+            <div class="admin-toolbar">
+                <h2>Orders</h2>
+                <select id="order-status-filter" class="admin-select">
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Total (PKR)</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== Customers Tab ===== -->
+        <section id="tab-customers" class="admin-tab-content">
+            <div class="admin-toolbar">
+                <h2>Customers</h2>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Address</th>
+                            <th>Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customers-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- ===== Product Modal (Add / Edit) ===== -->
+    <div id="product-modal" class="admin-modal hidden">
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h3 id="product-modal-title">Add Product</h3>
+                <button class="modal-close" id="product-modal-close">&times;</button>
+            </div>
+            <form id="product-form">
+                <input type="hidden" id="pf-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pf-name">Name</label>
+                        <input type="text" id="pf-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pf-slug">Slug</label>
+                        <input type="text" id="pf-slug" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pf-price">Price (PKR)</label>
+                        <input type="number" id="pf-price" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pf-category">Category</label>
+                        <select id="pf-category" required>
+                            <option value="perfumes">Perfumes</option>
+                            <option value="skincare">Skin Care</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="pf-image">Image Path</label>
+                    <input type="text" id="pf-image" placeholder="images/perfumes/name.png" required>
+                </div>
+                <div class="form-group">
+                    <label for="pf-short-desc">Short Description</label>
+                    <input type="text" id="pf-short-desc" required>
+                </div>
+                <div class="form-group">
+                    <label for="pf-description">Full Description</label>
+                    <textarea id="pf-description" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="pf-specs">Specs (JSON)</label>
+                    <textarea id="pf-specs" rows="3" placeholder='{"Key": "Value"}'></textarea>
+                </div>
+                <div id="product-form-error" class="form-error hidden"></div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="product-modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== Order Detail Modal ===== -->
+    <div id="order-modal" class="admin-modal hidden">
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h3>Order Details</h3>
+                <button class="modal-close" id="order-modal-close">&times;</button>
+            </div>
+            <div id="order-detail-body"></div>
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="order-new-status">Update Status</label>
+                <div class="form-row">
+                    <select id="order-new-status" class="admin-select" style="flex:1;">
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button class="btn btn-primary btn-small" id="btn-update-status">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="admin-toast hidden"></div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

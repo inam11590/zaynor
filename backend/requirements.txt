@@ -1,0 +1,31 @@
+# ZAYNOR Backend — Phase 10 Dependencies
+#
+# fastapi             — The web framework
+# uvicorn             — ASGI server
+# pydantic            — Data validation (included with FastAPI)
+# pydantic-settings   — Loads .env configuration
+# python-dotenv       — Reads .env files
+# sqlalchemy          — ORM for database
+# alembic             — Database migrations
+# python-jose         — JWT token encoding/decoding
+# passlib             — Password hashing utilities
+# bcrypt              — Password hashing backend for passlib
+# slowapi             — Rate limiting middleware
+# python-multipart    — Form data parsing
+# pytest              — Test framework
+# httpx               — HTTP client for tests
+
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+sqlalchemy==2.0.36
+alembic==1.16.5
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+slowapi==0.1.10
+python-multipart==0.0.20
+pytest==8.3.4
+httpx==0.28.1

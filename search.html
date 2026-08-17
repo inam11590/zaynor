@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results | ZAYNOR</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .search-section {
+            padding: 7rem 1.5rem 4rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .search-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .search-header h1 {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .search-header .search-term {
+            color: var(--gold-primary);
+        }
+        .search-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .search-results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+        .search-product-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: border-color var(--transition-fast);
+            cursor: pointer;
+        }
+        .search-product-card:hover {
+            border-color: var(--gold-primary);
+        }
+        .search-product-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+        }
+        .search-product-card .card-body {
+            padding: 1.25rem;
+        }
+        .search-product-card .card-category {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gold-primary);
+            margin-bottom: 0.5rem;
+        }
+        .search-product-card .card-name {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .search-product-card .card-price {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gold-accent);
+        }
+        .search-empty {
+            text-align: center;
+            padding: 4rem 1rem;
+        }
+        .search-empty h2 {
+            font-family: var(--font-heading);
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .search-empty p { color: var(--text-secondary); }
+
+        .search-bar-inline {
+            display: flex;
+            max-width: 500px;
+            margin: 0 auto 2rem;
+            gap: 0.5rem;
+        }
+        .search-bar-inline input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+        }
+        .search-bar-inline input:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+        }
+        .search-bar-inline .btn {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <nav class="navbar" aria-label="Main Navigation">
+            <a href="index.html" class="logo">ZAYNOR<span>.</span></a>
+            <button class="nav-toggle" aria-label="Toggle Navigation Menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="perfumes.html" class="nav-link">Perfumes</a></li>
+                <li><a href="skincare.html" class="nav-link">Skin Care</a></li>
+                <li><a href="about.html" class="nav-link">About</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+                <li><a href="tracking.html" class="nav-link">Track Order</a></li>
+                <li><a href="wishlist.html" class="nav-link">Wishlist</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="search-section">
+        <div class="search-header">
+            <h1>Search Results for "<span id="search-term-display" class="search-term"></span>"</h1>
+            <p id="search-count"></p>
+        </div>
+
+        <form class="search-bar-inline" id="search-bar-form">
+            <input type="text" id="search-bar-input" placeholder="Search products...">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+
+        <div id="search-results" class="search-results-grid"></div>
+        <div id="search-empty" class="search-empty" style="display:none;">
+            <h2>No products found</h2>
+            <p>Try a different search term.</p>
+        </div>
+    </section>
+
+    <script>
+    (function () {
+        'use strict';
+        var API = 'http://127.0.0.1:8000/api/v1';
+
+        function getQuery() {
+            return new URLSearchParams(window.location.search).get('q') || '';
+        }
+
+        function esc(s) {
+            if (!s) return '';
+            var d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        function doSearch(query) {
+            if (!query) return;
+            document.getElementById('search-term-display').textContent = query;
+            document.getElementById('search-bar-input').value = query;
+            document.title = 'Search: ' + query + ' | ZAYNOR';
+
+            fetch(API + '/products/search?q=' + encodeURIComponent(query))
+                .then(function (res) { return res.json(); })
+                .then(function (products) {
+                    var grid = document.getElementById('search-results');
+                    var empty = document.getElementById('search-empty');
+                    var count = document.getElementById('search-count');
+                    grid.innerHTML = '';
+
+                    if (!products.length) {
+                        grid.style.display = 'none';
+                        empty.style.display = '';
+                        count.textContent = '';
+                        return;
+                    }
+
+                    empty.style.display = 'none';
+                    grid.style.display = '';
+                    count.textContent = products.length + ' product(s) found';
+
+                    products.forEach(function (p) {
+                        var catName = p.category ? p.category.name : '';
+                        var card = document.createElement('a');
+                        card.className = 'search-product-card';
+                        card.href = '#';
+                        card.setAttribute('data-slug', p.slug);
+                        card.innerHTML =
+                            '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '">' +
+                            '<div class="card-body">' +
+                                '<div class="card-category">' + esc(catName) + '</div>' +
+                                '<div class="card-name">' + esc(p.name) + '</div>' +
+                                '<div class="card-price">' + Number(p.price).toLocaleString() + ' PKR</div>' +
+                            '</div>';
+                        grid.appendChild(card);
+                    });
+                });
+        }
+
+        document.getElementById('search-bar-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            var q = document.getElementById('search-bar-input').value.trim();
+            if (q) {
+                window.location.search = '?q=' + encodeURIComponent(q);
+            }
+        });
+
+        doSearch(getQuery());
+    })();
+    </script>
+</body>
+</html>

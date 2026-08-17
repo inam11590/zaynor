@@ -1545,3 +1545,35 @@ main, .page-header {
     outline-offset: 3px;
 }
 
+/* ==========================================================================
+   Wishlist Heart Button (on product cards)
+   ========================================================================== */
+.wishlist-heart {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    transition: background var(--transition-fast), transform var(--transition-fast);
+    line-height: 1;
+    padding: 0;
+}
+.wishlist-heart:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.15);
+}
+.wishlist-heart.active {
+    color: #e74c3c;
+    background: rgba(255, 255, 255, 0.9);
+}
+

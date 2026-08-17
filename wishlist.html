@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist | ZAYNOR</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .wishlist-section {
+            min-height: 60vh;
+            padding: 7rem 1.5rem 4rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .wishlist-section h1 {
+            font-family: var(--font-heading);
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .wishlist-section .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+        .wishlist-empty {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: var(--text-secondary);
+        }
+        .wishlist-empty .icon-heart {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+        .wishlist-empty p {
+            margin-bottom: 1.5rem;
+        }
+        .wishlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .wishlist-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        .wishlist-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .wishlist-card img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+        }
+        .wishlist-card-body {
+            padding: 1rem;
+        }
+        .wishlist-card-body h3 {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        .wishlist-card-body .price {
+            color: var(--gold-primary);
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin-bottom: 0.75rem;
+        }
+        .wishlist-card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .wishlist-card-actions .btn { flex: 1; text-align: center; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar" aria-label="Main Navigation">
+            <a href="index.html" class="logo">ZAYNOR<span>.</span></a>
+            <button class="nav-toggle" aria-label="Toggle Navigation Menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="perfumes.html" class="nav-link">Perfumes</a></li>
+                <li><a href="skincare.html" class="nav-link">Skin Care</a></li>
+                <li><a href="about.html" class="nav-link">About</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+                <li><a href="tracking.html" class="nav-link">Track Order</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="wishlist-section">
+        <h1>My Wishlist</h1>
+        <p class="subtitle">Products you've saved for later.</p>
+        <div id="wishlist-container"></div>
+    </section>
+
+    <script>
+    (function () {
+        'use strict';
+        var API = 'http://127.0.0.1:8000/api/v1';
+        var WHATSAPP = '923185868241';
+
+        function getSessionKey() {
+            var key = localStorage.getItem('zaynor_session');
+            if (!key) {
+                key = 'sess_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+                localStorage.setItem('zaynor_session', key);
+            }
+            return key;
+        }
+
+        var container = document.getElementById('wishlist-container');
+        container.innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:2rem;">Loading...</p>';
+
+        fetch(API + '/wishlist/?session_key=' + encodeURIComponent(getSessionKey()))
+            .then(function (r) { return r.json(); })
+            .then(function (items) {
+                if (!items || items.length === 0) {
+                    container.innerHTML =
+                        '<div class="wishlist-empty">' +
+                        '<div class="icon-heart">&#9825;</div>' +
+                        '<p>Your wishlist is empty.</p>' +
+                        '<a href="index.html" class="btn btn-primary">Browse Products</a>' +
+                        '</div>';
+                    return;
+                }
+
+                var html = '<div class="wishlist-grid">';
+                items.forEach(function (item) {
+                    var price = item.product_price ? Number(item.product_price).toLocaleString('en-PK') : '';
+                    var img = item.product_image || 'images/placeholder.png';
+                    var waMsg = 'Assalam-o-Alaikum ZAYNOR,%0AI would like to order:%0A%0A*Product:* ' + encodeURIComponent(item.product_name || item.product_slug);
+                    var waLink = 'https://wa.me/' + WHATSAPP + '?text=' + waMsg;
+
+                    html +=
+                        '<div class="wishlist-card" data-slug="' + item.product_slug + '">' +
+                        '<img src="' + img + '" alt="' + esc(item.product_name || '') + '">' +
+                        '<div class="wishlist-card-body">' +
+                        '<h3>' + esc(item.product_name || item.product_slug) + '</h3>' +
+                        (price ? '<div class="price">Rs. ' + price + '</div>' : '') +
+                        '<div class="wishlist-card-actions">' +
+                        '<a href="' + waLink + '" target="_blank" class="btn btn-whatsapp btn-small">Order</a>' +
+                        '<button class="btn btn-outline btn-small remove-btn" data-slug="' + item.product_slug + '">Remove</button>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>';
+                });
+                html += '</div>';
+                container.innerHTML = html;
+
+                container.querySelectorAll('.remove-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var slug = this.getAttribute('data-slug');
+                        fetch(API + '/wishlist/' + encodeURIComponent(slug) + '?session_key=' + encodeURIComponent(getSessionKey()), {
+                            method: 'DELETE'
+                        }).then(function () {
+                            var card = container.querySelector('[data-slug="' + slug + '"]');
+                            if (card) card.remove();
+                            if (container.querySelectorAll('.wishlist-card').length === 0) {
+                                container.innerHTML =
+                                    '<div class="wishlist-empty">' +
+                                    '<div class="icon-heart">&#9825;</div>' +
+                                    '<p>Your wishlist is empty.</p>' +
+                                    '<a href="index.html" class="btn btn-primary">Browse Products</a>' +
+                                    '</div>';
+                            }
+                        });
+                    });
+                });
+            })
+            .catch(function () {
+                container.innerHTML =
+                    '<div class="wishlist-empty">' +
+                    '<p>Could not load wishlist. Please try again later.</p>' +
+                    '</div>';
+            });
+
+        function esc(s) {
+            if (!s) return '';
+            var d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+    })();
+    </script>
+</body>
+</html>
