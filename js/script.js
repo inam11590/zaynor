@@ -275,11 +275,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 2. Mobile Menu — Separate drawer that never touches the desktop .nav-menu
+    // 2. Mobile Menu — Only on screens ≤ 768 px
     const navToggle = document.querySelector(".nav-toggle");
     const navMenu   = document.querySelector(".nav-menu"); // desktop nav — left untouched
 
-    if (navToggle && navMenu) {
+    if (navToggle && navMenu && window.innerWidth <= 768) {
 
         // ── 1. Overlay backdrop ──────────────────────────────────────────
         const overlay = document.createElement("div");

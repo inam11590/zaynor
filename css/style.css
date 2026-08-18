@@ -254,7 +254,7 @@ img {
     font-size: 1.8rem;
     font-weight: 700;
     letter-spacing: 3px;
-    color: #fff;
+    color: var(--gold-primary);
     display: flex;
     align-items: center;
     gap: 5px;
@@ -339,15 +339,19 @@ img {
 .header-scrolled .nav-toggle span {
     background-color: var(--text-primary);
 }
-}
+
 
 /* Default: Mobile Drawer & Overlay are COMPLETELY HIDDEN on Desktop screens (>768px) */
 .mobile-drawer {
     display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }
 
 .nav-overlay {
     display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
     position: fixed;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.65);
@@ -376,12 +380,16 @@ img {
     /* Show overlay on mobile when active */
     .nav-overlay.active {
         display: block !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
         opacity: 1;
     }
 
     /* ── Drawer panel ─────────────────────────────────────────────────────── */
     .mobile-drawer {
         display: flex !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
         position: fixed;
         top: 0;
         right: -110%;
@@ -556,7 +564,8 @@ img {
 
 .hero-title {
     font-size: 4.5rem;
-    color: #F7F4EE;
+    font-weight: 900;
+    color: var(--gold-primary);
     letter-spacing: 5px;
     margin-bottom: 1.5rem;
     text-transform: uppercase;
@@ -571,7 +580,7 @@ img {
     font-size: 1.1rem;
     max-width: 600px;
     margin: 0 auto 3rem;
-    color: var(--text-secondary);
+    color: #ffffff;
     font-weight: 300;
 }
 
