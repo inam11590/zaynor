@@ -35,9 +35,10 @@
         <header class="admin-header">
             <a href="index.html" class="logo admin-logo-text">ZAYNOR<span>.</span></a>
             <nav class="admin-nav">
-                <button class="admin-tab active" data-tab="products">Products</button>
+                <button class="admin-tab" data-tab="products">Products</button>
                 <button class="admin-tab" data-tab="orders">Orders</button>
                 <button class="admin-tab" data-tab="customers">Customers</button>
+                <button class="admin-tab" data-tab="analytics">Analytics</button>
             </nav>
             <div class="admin-header-right">
                 <span id="admin-email" class="admin-user-info"></span>
@@ -118,6 +119,40 @@
                     </thead>
                     <tbody id="customers-table-body"></tbody>
                 </table>
+            </div>
+        </section>
+
+        <!-- ===== Analytics Tab ===== -->
+        <section id="tab-analytics" class="admin-tab-content">
+            <div class="admin-toolbar">
+                <h2>Analytics</h2>
+                <select id="analytics-revenue-period" class="admin-select">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="365">Last Year</option>
+                </select>
+            </div>
+
+            <!-- KPI Cards -->
+            <div id="analytics-kpis" class="analytics-kpis"></div>
+
+            <!-- Revenue Table -->
+            <div class="admin-table-wrap" style="margin-top:1.5rem;">
+                <h3 style="font-family:var(--font-heading);margin-bottom:0.75rem;">Revenue by Day</h3>
+                <div id="analytics-revenue-table"></div>
+            </div>
+
+            <!-- Top Products -->
+            <div class="admin-table-wrap" style="margin-top:1.5rem;">
+                <h3 style="font-family:var(--font-heading);margin-bottom:0.75rem;">Top Selling Products</h3>
+                <div id="analytics-top-products"></div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="admin-table-wrap" style="margin-top:1.5rem;">
+                <h3 style="font-family:var(--font-heading);margin-bottom:0.75rem;">Recent Orders</h3>
+                <div id="analytics-recent-orders"></div>
             </div>
         </section>
     </div>

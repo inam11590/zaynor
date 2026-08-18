@@ -99,6 +99,7 @@
         if (tab === 'products') loadProducts();
         else if (tab === 'orders') loadOrders();
         else if (tab === 'customers') loadCustomers();
+        else if (tab === 'analytics') loadAnalytics();
     }
 
     // ── Products ─────────────────────────────────────────────────────────
@@ -407,6 +408,90 @@
                 if (e.target === modal) hide(modal);
             });
         });
+
+        // Analytics — period change
+        $('#analytics-revenue-period').addEventListener('change', function () { loadAnalytics(); });
+    }
+
+    // ── Analytics ─────────────────────────────────────────────────────────
+    function loadAnalytics() {
+        var days = parseInt($('#analytics-revenue-period').value) || 30;
+
+        // Fetch overview + revenue + top products + recent orders in parallel
+        Promise.all([
+            api('GET', '/analytics/overview'),
+            api('GET', '/analytics/revenue?days=' + days),
+            api('GET', '/analytics/top-products?limit=5'),
+            api('GET', '/analytics/recent-orders?limit=10')
+        ]).then(function (results) {
+            var overview = results[0];
+            var revenue = results[1];
+            var topProducts = results[2];
+            var recentOrders = results[3];
+
+            renderAnalyticsKPIs(overview);
+            renderRevenueTable(revenue);
+            renderTopProducts(topProducts);
+            renderRecentOrders(recentOrders);
+        }).catch(function (e) { toast('Analytics error: ' + e.message); });
+    }
+
+    function renderAnalyticsKPIs(data) {
+        var kpis = $('#analytics-kpis');
+        var status = data.orders_by_status || {};
+        kpis.innerHTML =
+            '<div class="kpi-card"><div class="kpi-value">' + data.total_orders + '</div><div class="kpi-label">Total Orders</div></div>' +
+            '<div class="kpi-card"><div class="kpi-value">Rs. ' + Number(data.total_revenue).toLocaleString() + '</div><div class="kpi-label">Total Revenue</div></div>' +
+            '<div class="kpi-card"><div class="kpi-value">' + data.total_customers + '</div><div class="kpi-label">Customers</div></div>' +
+            '<div class="kpi-card"><div class="kpi-value">Rs. ' + Number(data.avg_order_value).toLocaleString() + '</div><div class="kpi-label">Avg Order Value</div></div>' +
+            '<div class="kpi-card"><div class="kpi-value">' + data.total_products + '</div><div class="kpi-label">Products</div></div>' +
+            '<div class="kpi-card"><div class="kpi-value">' + (status.pending || 0) + '</div><div class="kpi-label">Pending Orders</div></div>';
+    }
+
+    function renderRevenueTable(rows) {
+        var el = $('#analytics-revenue-table');
+        if (!rows || rows.length === 0) {
+            el.innerHTML = '<p style="color:var(--text-secondary);font-size:0.85rem;">No revenue data for this period.</p>';
+            return;
+        }
+        var totalRev = rows.reduce(function (s, r) { return s + r.revenue; }, 0);
+        var totalOrd = rows.reduce(function (s, r) { return s + r.order_count; }, 0);
+        var html = '<table class="admin-table"><thead><tr><th>Date</th><th>Orders</th><th>Revenue (PKR)</th></tr></thead><tbody>';
+        rows.forEach(function (r) {
+            html += '<tr><td>' + r.date + '</td><td>' + r.order_count + '</td><td>' + Number(r.revenue).toLocaleString() + '</td></tr>';
+        });
+        html += '</tbody><tfoot><tr style="font-weight:bold;"><td>Total</td><td>' + totalOrd + '</td><td>' + Number(totalRev).toLocaleString() + '</td></tr></tfoot></table>';
+        el.innerHTML = html;
+    }
+
+    function renderTopProducts(products) {
+        var el = $('#analytics-top-products');
+        if (!products || products.length === 0) {
+            el.innerHTML = '<p style="color:var(--text-secondary);font-size:0.85rem;">No sales data yet.</p>';
+            return;
+        }
+        var html = '<table class="admin-table"><thead><tr><th>#</th><th>Product</th><th>Price</th><th>Sold</th><th>Revenue (PKR)</th></tr></thead><tbody>';
+        products.forEach(function (p, i) {
+            html += '<tr><td>' + (i + 1) + '</td><td>' + esc(p.name) + '</td><td>' + Number(p.price).toLocaleString() + '</td><td>' + p.total_sold + '</td><td>' + Number(p.total_revenue).toLocaleString() + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        el.innerHTML = html;
+    }
+
+    function renderRecentOrders(orders) {
+        var el = $('#analytics-recent-orders');
+        if (!orders || orders.length === 0) {
+            el.innerHTML = '<p style="color:var(--text-secondary);font-size:0.85rem;">No orders yet.</p>';
+            return;
+        }
+        var html = '<table class="admin-table"><thead><tr><th>ID</th><th>Status</th><th>Total (PKR)</th><th>Items</th><th>Date</th></tr></thead><tbody>';
+        orders.forEach(function (o) {
+            var itemCount = o.items ? o.items.reduce(function (s, i) { return s + i.quantity; }, 0) : 0;
+            var date = new Date(o.created_at).toLocaleDateString();
+            html += '<tr><td>' + o.id + '</td><td><span class="status-badge status-' + o.status + '">' + o.status + '</span></td><td>' + Number(o.total).toLocaleString() + '</td><td>' + itemCount + '</td><td>' + date + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        el.innerHTML = html;
     }
 
     function loadUserInfo() {

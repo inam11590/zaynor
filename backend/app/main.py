@@ -61,6 +61,7 @@ from app.api.orders import router as orders_router  # noqa: E402
 from app.api.reviews import router as reviews_router  # noqa: E402
 from app.api.wishlist import router as wishlist_router  # noqa: E402
 from app.api.coupons import router as coupons_router  # noqa: E402
+from app.api.analytics import router as analytics_router  # noqa: E402
 
 app.include_router(auth_router, prefix=settings.API_PREFIX)
 app.include_router(products_router, prefix=settings.API_PREFIX)
@@ -69,6 +70,7 @@ app.include_router(orders_router, prefix=settings.API_PREFIX)
 app.include_router(reviews_router, prefix=settings.API_PREFIX)
 app.include_router(wishlist_router, prefix=settings.API_PREFIX)
 app.include_router(coupons_router, prefix=settings.API_PREFIX)
+app.include_router(analytics_router, prefix=settings.API_PREFIX)
 
 
 # ---------------------------------------------------------------------------

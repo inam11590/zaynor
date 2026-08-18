@@ -1,113 +1,52 @@
 # ZAYNOR Backend
 
-The FastAPI backend for the ZAYNOR e-commerce platform. Currently at **Phase 12** — coupon and discount code system is live.
+The FastAPI backend for the ZAYNOR e-commerce platform. Currently at **Phase 13** — admin analytics dashboard is live.
 
 ## What Is This?
 
-A Python backend server that powers the ZAYNOR website. It has JWT authentication, an admin dashboard, order tracking, product search, product reviews, email notifications, database migrations, rate limiting, a product wishlist, and a coupon/discount system.
+A Python backend server that powers the ZAYNOR website. It has JWT authentication, an admin dashboard with analytics, order tracking, product search, product reviews, email notifications, database migrations, rate limiting, a product wishlist, and a coupon/discount system.
 
 ## Setup (Windows)
-
-### 1. Create a virtual environment
 
 ```bash
 cd backend
 python -m venv .venv
-```
-
-### 2. Activate the virtual environment
-
-```bash
 .venv\Scripts\activate
-```
-
-### 3. Install dependencies
-
-```bash
 pip install -r requirements.txt
-```
-
-### 4. Configure environment variables
-
-```bash
 copy .env.example .env
-```
-
-### 5. Seed the database
-
-```bash
 python -m app.seed
-```
-
-### 6. Start the server
-
-```bash
 uvicorn app.main:app --reload
 ```
 
-### 7. Open the frontend
+Open `admin.html` — login with `admin@zaynor.com` / `admin123`.
 
-- **Public site:** Open `index.html`
-- **Admin dashboard:** Open `admin.html` — login with `admin@zaynor.com` / `admin123`
-- **Track order:** Open `tracking.html`
-- **Search:** Use the search bar or open `search.html?q=term`
-- **Wishlist:** Open `wishlist.html`
+## Admin Dashboard
 
-## Coupon / Discount System
+The admin dashboard (`admin.html`) has 4 tabs:
 
-Admins can create discount codes. Customers apply them in the product modal — the discounted price shows inline and the coupon code is included in the WhatsApp order message.
+| Tab | Description |
+|-----|-------------|
+| **Products** | CRUD products, manage categories and specs |
+| **Orders** | View orders, update status (pending → confirmed → shipped → delivered) |
+| **Customers** | View registered customers |
+| **Analytics** | Revenue stats, top products, recent orders (NEW) |
 
-### How It Works
+### Analytics Dashboard
 
-1. **Admin creates a coupon** via `POST /api/v1/coupons/` (e.g. `WINTER20` for 20% off)
-2. **Customer opens a product modal** → sees a coupon input field
-3. **Customer enters code** → `POST /api/v1/coupons/validate` checks validity
-4. **If valid** → price updates with strikethrough + discounted price, WhatsApp link includes the coupon
-5. **Admin manages coupons** — list, create, update, delete via admin-only endpoints
+The Analytics tab shows:
+- **KPI cards** — total orders, revenue, customers, avg order value, products, pending orders
+- **Revenue by day** — daily breakdown with totals, filterable by period (7/30/90/365 days)
+- **Top selling products** — ranked by quantity sold with revenue
+- **Recent orders** — last 10 orders with status and items
 
-### Coupon Endpoints
+### Analytics Endpoints (Admin Only)
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/api/v1/coupons/validate` | No | Validate a coupon against an order amount |
-| GET | `/api/v1/coupons/` | Admin | List all coupons |
-| POST | `/api/v1/coupons/` | Admin | Create a new coupon |
-| PUT | `/api/v1/coupons/{id}` | Admin | Update a coupon |
-| DELETE | `/api/v1/coupons/{id}` | Admin | Delete a coupon |
-
-### Coupon Properties
-
-| Field | Description |
-|-------|-------------|
-| `code` | Unique uppercase code (e.g. `WELCOME10`) |
-| `discount_percent` | Percentage off (1-100) |
-| `min_order_amount` | Minimum order value to use the coupon |
-| `max_uses` | Total usage limit (null = unlimited) |
-| `is_active` | Enable/disable the coupon |
-| `expires_at` | Expiration date (null = never expires) |
-
-## Database Migrations
-
-```bash
-alembic revision --autogenerate -m "description"
-alembic upgrade head
-alembic downgrade -1
-```
-
-## Production Deployment
-
-```bash
-# Docker
-docker build -t zaynor-backend .
-docker run -d --name zaynor-api -p 8000:8000 \
-  -e DATABASE_URL=postgresql://user:pass@db:5432/zaynor \
-  -e SECRET_KEY=your-production-secret-key \
-  zaynor-backend
-
-# Systemd
-sudo systemctl enable zaynor
-sudo systemctl start zaynor
-```
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/analytics/overview` | Total orders, revenue, customers, products, avg order, status breakdown |
+| GET | `/api/v1/analytics/revenue?days=30` | Daily revenue grouped by date |
+| GET | `/api/v1/analytics/top-products?limit=5` | Top products by quantity sold |
+| GET | `/api/v1/analytics/recent-orders?limit=10` | Most recent orders with items |
 
 ## Available Endpoints
 
@@ -138,6 +77,10 @@ sudo systemctl start zaynor
 | POST | `/api/v1/coupons/` | Admin | Create coupon |
 | PUT | `/api/v1/coupons/{id}` | Admin | Update coupon |
 | DELETE | `/api/v1/coupons/{id}` | Admin | Delete coupon |
+| GET | `/api/v1/analytics/overview` | Admin | Dashboard overview stats |
+| GET | `/api/v1/analytics/revenue?days=30` | Admin | Daily revenue data |
+| GET | `/api/v1/analytics/top-products?limit=5` | Admin | Top selling products |
+| GET | `/api/v1/analytics/recent-orders?limit=10` | Admin | Recent orders |
 | POST | `/api/v1/auth/register` | No | Register user |
 | POST | `/api/v1/auth/login` | No | Login |
 | GET | `/api/v1/auth/me` | Yes | Current user |
@@ -149,4 +92,4 @@ cd backend
 python -m pytest tests/ -v
 ```
 
-76 tests covering all endpoints (Phases 1-12).
+81 tests covering all endpoints (Phases 1-13).

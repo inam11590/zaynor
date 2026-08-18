@@ -1099,3 +1099,60 @@ def test_delete_coupon():
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 204
+
+
+# ─── Phase 13: Analytics tests ────────────────────────────────────────
+
+
+def test_analytics_overview():
+    token = _get_admin_token()
+    resp = client.get(
+        "/api/v1/analytics/overview",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "total_orders" in data
+    assert "total_revenue" in data
+    assert "total_customers" in data
+    assert "avg_order_value" in data
+    assert "orders_by_status" in data
+
+
+def test_analytics_revenue():
+    token = _get_admin_token()
+    resp = client.get(
+        "/api/v1/analytics/revenue?days=30",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), list)
+
+
+def test_analytics_top_products():
+    token = _get_admin_token()
+    resp = client.get(
+        "/api/v1/analytics/top-products?limit=3",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), list)
+
+
+def test_analytics_recent_orders():
+    token = _get_admin_token()
+    resp = client.get(
+        "/api/v1/analytics/recent-orders?limit=5",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), list)
+
+
+def test_non_admin_analytics_forbidden():
+    token = _get_user_token()
+    resp = client.get(
+        "/api/v1/analytics/overview",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 403
