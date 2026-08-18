@@ -10,20 +10,20 @@
 :root {
     --bg-primary: #F7F4EE;
     --bg-secondary: #EFEAE1;
-    --bg-tertiary: #1b1b22;
-    --bg-overlay: rgba(10, 10, 12, 0.85);
+    --bg-tertiary: #E7E1D6;
+    --bg-overlay: rgba(247, 244, 238, 0.92);
     
     --gold-primary: #B08D57;
     --gold-accent: #8F6F3F;
-    --gold-dark: #8c6b30;
-    --gold-muted: rgba(197, 160, 89, 0.15);
+    --gold-dark: #765A32;
+    --gold-muted: rgba(176, 141, 87, 0.15);
     
     --text-primary: #171717;
     --text-secondary: #68645D;
-    --text-dark: #0a0a0c;
+    --text-dark: #24211D;
     
-    --border-color: rgba(197, 160, 89, 0.15);
-    --border-light: rgba(255, 255, 255, 0.05);
+    --border-color: #DDD6C8;
+    --border-light: #E8E2D8;
     
     --font-heading: 'Playfair Display', serif;
     --font-body: 'Montserrat', sans-serif;
@@ -228,7 +228,7 @@ img {
 }
 
 .header-scrolled {
-    background-color: rgba(10, 10, 12, 0.95);
+    background-color: rgba(247, 244, 238, 0.95);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-light);
     box-shadow: 0 5px 25px rgba(0,0,0,0.4);
@@ -542,6 +542,7 @@ img {
 
 .hero-title {
     font-size: 4.5rem;
+    color: #F7F4EE;
     letter-spacing: 5px;
     margin-bottom: 1.5rem;
     text-transform: uppercase;
@@ -1317,6 +1318,7 @@ textarea.form-control {
 
 .page-title {
     font-size: 3rem;
+    color: #F7F4EE;
     text-transform: uppercase;
     letter-spacing: 3px;
     margin-bottom: 0.5rem;
