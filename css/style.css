@@ -8,18 +8,18 @@
 
 /* CSS Variables for design tokens */
 :root {
-    --bg-primary: #0a0a0c;
-    --bg-secondary: #121216;
+    --bg-primary: #F7F4EE;
+    --bg-secondary: #EFEAE1;
     --bg-tertiary: #1b1b22;
     --bg-overlay: rgba(10, 10, 12, 0.85);
     
-    --gold-primary: #c5a059;
-    --gold-accent: #e5c483;
+    --gold-primary: #B08D57;
+    --gold-accent: #8F6F3F;
     --gold-dark: #8c6b30;
     --gold-muted: rgba(197, 160, 89, 0.15);
     
-    --text-primary: #f5f5f7;
-    --text-secondary: #a1a1a6;
+    --text-primary: #171717;
+    --text-secondary: #68645D;
     --text-dark: #0a0a0c;
     
     --border-color: rgba(197, 160, 89, 0.15);
