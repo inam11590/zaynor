@@ -254,10 +254,15 @@ img {
     font-size: 1.8rem;
     font-weight: 700;
     letter-spacing: 3px;
-    color: var(--text-primary);
+    color: #fff;
     display: flex;
     align-items: center;
     gap: 5px;
+    transition: var(--transition-fast);
+}
+
+.header-scrolled .logo {
+    color: var(--text-primary);
 }
 
 .logo span {
@@ -279,10 +284,14 @@ img {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 1.5px;
-    color: var(--text-secondary);
+    color: rgba(255,255,255,0.85);
     position: relative;
     padding: 5px 0;
     transition: var(--transition-fast);
+}
+
+.header-scrolled .nav-link {
+    color: var(--text-secondary);
 }
 
 .nav-link:hover, .nav-link.active {
@@ -322,9 +331,14 @@ img {
     display: block;
     width: 24px;
     height: 2px;
-    background-color: var(--text-primary);
+    background-color: #fff;
     border-radius: 2px;
     transition: var(--transition-fast);
+}
+
+.header-scrolled .nav-toggle span {
+    background-color: var(--text-primary);
+}
 }
 
 /* Default: Mobile Drawer & Overlay are COMPLETELY HIDDEN on Desktop screens (>768px) */
