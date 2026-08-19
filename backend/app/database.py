@@ -5,13 +5,21 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from app.config import settings
 
-# SQLite needs check_same_thread=False; PostgreSQL does not
+DATABASE_URL = settings.DATABASE_URL
+
+# Render PostgreSQL requires the psycopg2 dialect
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+# Render PostgreSQL requires SSL
 connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
+if "postgresql" in DATABASE_URL:
+    connect_args = {"sslmode": "require"}
+elif DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    DATABASE_URL,
     connect_args=connect_args,
     echo=settings.DEBUG,
 )

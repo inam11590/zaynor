@@ -14,20 +14,22 @@ from app.database import Base, engine
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Create database tables and seed on first run."""
-    from app.database import SessionLocal
-    from app.models.user import User
-
-    Base.metadata.create_all(bind=engine)
-
-    # Auto-seed if no admin user exists (first deploy)
-    db = SessionLocal()
     try:
-        if not db.query(User).filter(User.is_admin == True).first():
-            from app.seed import seed
-            seed()
-            print("Database seeded automatically.")
-    finally:
-        db.close()
+        from app.database import SessionLocal
+        from app.models.user import User
+
+        Base.metadata.create_all(bind=engine)
+
+        db = SessionLocal()
+        try:
+            if not db.query(User).filter(User.is_admin == True).first():
+                from app.seed import seed
+                seed()
+                print("Database seeded automatically.")
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"Lifespan error (non-fatal): {e}")
 
     yield
 
