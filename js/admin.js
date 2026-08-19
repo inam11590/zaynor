@@ -5,7 +5,9 @@
 (function () {
     'use strict';
 
-    var API = 'http://127.0.0.1:8000/api/v1';
+    var API = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+        ? 'http://127.0.0.1:8000/api/v1'
+        : 'https://zaynor-backend.onrender.com/api/v1';
     var token = localStorage.getItem('zaynor_admin_token');
 
     // ── DOM helpers ──────────────────────────────────────────────────────

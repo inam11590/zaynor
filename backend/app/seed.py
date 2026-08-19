@@ -324,6 +324,7 @@ def seed():
                 description=prod_data["description"],
                 specs=json.dumps(prod_data["specs"]),
                 category_id=category_map[cat_slug],
+                is_active=True,
             )
             db.add(product)
             print(f"  + Created product: {prod_data['name']}")

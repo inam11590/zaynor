@@ -5,10 +5,11 @@
 
 // Global Configuration
 const CONFIG = {
-    whatsappNumber: "923185868241", // Replace with your real Pakistani WhatsApp number (e.g., "923XXXXXXXXX")
+    whatsappNumber: "923185868241",
     brandName: "ZAYNOR",
-    // Backend API base URL. Set to "" or comment out to disable API and use hardcoded data only.
-    apiBaseUrl: "http://127.0.0.1:8000/api/v1"
+    apiBaseUrl: (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+        ? "http://127.0.0.1:8000/api/v1"
+        : "https://zaynor-backend.onrender.com/api/v1"
 };
 
 // Category ID → slug mapping (matches backend database IDs)

@@ -13,8 +13,22 @@ from app.database import Base, engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create database tables on application startup."""
+    """Create database tables and seed on first run."""
+    from app.database import SessionLocal
+    from app.models.user import User
+
     Base.metadata.create_all(bind=engine)
+
+    # Auto-seed if no admin user exists (first deploy)
+    db = SessionLocal()
+    try:
+        if not db.query(User).filter(User.is_admin == True).first():
+            from app.seed import seed
+            seed()
+            print("Database seeded automatically.")
+    finally:
+        db.close()
+
     yield
 
 
@@ -45,7 +59,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # ---------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
