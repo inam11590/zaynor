@@ -7,7 +7,7 @@
 const CONFIG = {
     whatsappNumber: "923185868241",
     brandName: "ZAYNOR",
-    apiBaseUrl: (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+    apiBaseUrl: (location.hostname === "localhost" || location.hostname === "127.0.0.1" || !location.hostname)
         ? "http://127.0.0.1:8000/api/v1"
         : "https://zaynor-backend.onrender.com/api/v1"
 };
