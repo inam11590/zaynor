@@ -1,9 +1,17 @@
 """Pydantic schemas for Product responses."""
 
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, field_validator
+
+
+class CategorySummary(BaseModel):
+    id: int
+    name: str
+    slug: str
+
+    model_config = {"from_attributes": True}
 
 
 class ProductBase(BaseModel):
@@ -19,6 +27,8 @@ class ProductBase(BaseModel):
 class ProductRead(ProductBase):
     id: int
     specs: Dict[str, Any] = {}
+    is_active: bool = True
+    category: Optional[CategorySummary] = None
 
     model_config = {"from_attributes": True}
 
@@ -44,5 +54,7 @@ class ProductSummary(BaseModel):
     image: str
     short_description: str
     category_id: int
+    is_active: bool = True
+    category: Optional[CategorySummary] = None
 
     model_config = {"from_attributes": True}

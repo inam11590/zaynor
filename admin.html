@@ -57,10 +57,11 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Name</th>
+                            <th>Product</th>
                             <th>Slug</th>
                             <th>Price (PKR)</th>
                             <th>Category</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -190,8 +191,14 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="pf-image">Image Path</label>
-                    <input type="text" id="pf-image" placeholder="images/perfumes/name.png" required>
+                    <label for="pf-image">Image</label>
+                    <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+                        <div style="flex:1;">
+                            <input type="text" id="pf-image" placeholder="images/perfumes/name.png" required>
+                            <input type="file" id="pf-image-file" accept="image/*" style="margin-top:0.4rem;font-size:0.8rem;">
+                        </div>
+                        <div id="pf-image-preview" style="width:80px;height:80px;border-radius:8px;border:1px solid var(--border-light);overflow:hidden;display:none;flex-shrink:0;background:var(--bg-tertiary);"></div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="pf-short-desc">Short Description</label>
@@ -204,6 +211,10 @@
                 <div class="form-group">
                     <label for="pf-specs">Specs (JSON)</label>
                     <textarea id="pf-specs" rows="3" placeholder='{"Key": "Value"}'></textarea>
+                </div>
+                <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;">
+                    <input type="checkbox" id="pf-active" checked style="width:auto;">
+                    <label for="pf-active" style="margin:0;text-transform:none;letter-spacing:0;">Active (visible on website)</label>
                 </div>
                 <div id="product-form-error" class="form-error hidden"></div>
                 <div class="form-actions">

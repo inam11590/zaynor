@@ -104,19 +104,28 @@
 
     // ── Products ─────────────────────────────────────────────────────────
     function loadProducts() {
-        api('GET', '/products/').then(function (products) {
+        api('GET', '/products/all').then(function (products) {
             var tbody = $('#products-table-body');
             tbody.innerHTML = '';
             products.forEach(function (p) {
+                var imgSrc = p.image ? '../' + p.image : '';
+                var statusHtml = p.is_active
+                    ? '<span class="status-badge status-delivered">Active</span>'
+                    : '<span class="status-badge status-cancelled">Inactive</span>';
                 var tr = document.createElement('tr');
                 tr.innerHTML =
                     '<td>' + p.id + '</td>' +
-                    '<td>' + esc(p.name) + '</td>' +
+                    '<td style="display:flex;align-items:center;gap:0.6rem;">' +
+                        (imgSrc ? '<img src="' + esc(imgSrc) + '" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border-light);">' : '') +
+                        '<span>' + esc(p.name) + '</span>' +
+                    '</td>' +
                     '<td>' + esc(p.slug) + '</td>' +
                     '<td>' + Number(p.price).toLocaleString() + '</td>' +
                     '<td>' + esc(p.category ? p.category.name : '-') + '</td>' +
+                    '<td>' + statusHtml + '</td>' +
                     '<td class="actions-cell">' +
-                        '<button class="btn btn-outline btn-small" data-action="edit" data-id="' + p.id + '">Edit</button>' +
+                        '<button class="btn btn-outline btn-small" data-action="toggle-active" data-id="' + p.id + '" data-active="' + (p.is_active ? '1' : '0') + '">' + (p.is_active ? 'Hide' : 'Show') + '</button>' +
+                        '<button class="btn btn-outline btn-small" data-action="edit" data-id="' + p.id + '" data-slug="' + esc(p.slug) + '">Edit</button>' +
                         '<button class="btn btn-danger btn-small" data-action="delete" data-id="' + p.id + '">Delete</button>' +
                     '</td>';
                 tbody.appendChild(tr);
@@ -127,6 +136,9 @@
     function openProductModal(product) {
         var modal = $('#product-modal');
         var title = $('#product-modal-title');
+        var preview = $('#pf-image-preview');
+        hide(preview);
+
         if (product) {
             title.textContent = 'Edit Product';
             $('#pf-id').value = product.id;
@@ -144,11 +156,18 @@
             } else {
                 $('#pf-specs').value = specs || '{}';
             }
+            $('#pf-active').checked = product.is_active !== false;
+            if (product.image) {
+                preview.innerHTML = '<img src="../' + esc(product.image) + '" style="width:100%;height:100%;object-fit:cover;">';
+                show(preview);
+            }
         } else {
             title.textContent = 'Add Product';
             $('#product-form').reset();
             $('#pf-id').value = '';
+            $('#pf-active').checked = true;
         }
+        $('#pf-image-file').value = '';
         hide($('#product-form-error'));
         show(modal);
     }
@@ -164,9 +183,9 @@
         var image = $('#pf-image').value;
         var shortDesc = $('#pf-short-desc').value;
         var desc = $('#pf-description').value;
+        var isActive = $('#pf-active').checked;
 
-        if (id) {
-            // Update — send as query params
+        function buildQs(extra) {
             var qs = '?name=' + encodeURIComponent(name) +
                 '&slug=' + encodeURIComponent(slug) +
                 '&price=' + encodeURIComponent(price) +
@@ -174,9 +193,13 @@
                 '&short_description=' + encodeURIComponent(shortDesc) +
                 '&description=' + encodeURIComponent(desc) +
                 '&category_slug=' + encodeURIComponent(catSlug) +
-                '&specs=' + encodeURIComponent(specsVal);
+                '&specs=' + encodeURIComponent(specsVal) +
+                '&is_active=' + isActive;
+            return qs;
+        }
 
-            api('PUT', '/products/' + id + qs)
+        if (id) {
+            api('PUT', '/products/' + id + buildQs())
                 .then(function () {
                     toast('Product updated');
                     hide($('#product-modal'));
@@ -187,17 +210,7 @@
                     $('#product-form-error').textContent = e.message;
                 });
         } else {
-            // Create
-            var qs2 = '?name=' + encodeURIComponent(name) +
-                '&slug=' + encodeURIComponent(slug) +
-                '&price=' + encodeURIComponent(price) +
-                '&image=' + encodeURIComponent(image) +
-                '&short_description=' + encodeURIComponent(shortDesc) +
-                '&description=' + encodeURIComponent(desc) +
-                '&category_slug=' + encodeURIComponent(catSlug) +
-                '&specs=' + encodeURIComponent(specsVal);
-
-            api('POST', '/products/' + qs2)
+            api('POST', '/products/' + buildQs())
                 .then(function () {
                     toast('Product created');
                     hide($('#product-modal'));
@@ -215,6 +228,30 @@
         api('DELETE', '/products/' + id)
             .then(function () { toast('Product deleted'); loadProducts(); })
             .catch(function (e) { toast('Error: ' + e.message); });
+    }
+
+    function toggleProductActive(id, currentActive) {
+        var newActive = currentActive === '1' ? false : true;
+        api('PUT', '/products/' + id + '?is_active=' + newActive)
+            .then(function () {
+                toast(newActive ? 'Product is now visible' : 'Product hidden from website');
+                loadProducts();
+            })
+            .catch(function (e) { toast('Error: ' + e.message); });
+    }
+
+    function uploadImage(file, callback) {
+        var formData = new FormData();
+        formData.append('file', file);
+        var catSlug = $('#pf-category').value;
+        var folder = catSlug === 'skincare' ? 'skincare' : 'perfumes';
+        api('POST', '/products/upload?folder=' + encodeURIComponent(folder), formData)
+            .then(function (data) {
+                callback(data.path);
+            })
+            .catch(function (e) {
+                toast('Upload failed: ' + e.message);
+            });
     }
 
     // ── Orders ───────────────────────────────────────────────────────────
@@ -367,7 +404,7 @@
         // Products — Form submit
         $('#product-form').addEventListener('submit', saveProduct);
 
-        // Products — Table action buttons (edit / delete)
+        // Products — Table action buttons (edit / delete / toggle)
         $('#products-table-body').addEventListener('click', function (e) {
             var btn = e.target.closest('[data-action]');
             if (!btn) return;
@@ -376,12 +413,32 @@
 
             if (action === 'delete') {
                 deleteProduct(id);
+            } else if (action === 'toggle-active') {
+                toggleProductActive(id, btn.getAttribute('data-active'));
             } else if (action === 'edit') {
-                // Fetch full product details then open modal
-                api('GET', '/products/' + id).then(function (p) {
+                var slug = btn.getAttribute('data-slug');
+                api('GET', '/products/' + encodeURIComponent(slug)).then(function (p) {
                     openProductModal(p);
                 }).catch(function (e) { toast('Error: ' + e.message); });
             }
+        });
+
+        // Products — Image file upload
+        $('#pf-image-file').addEventListener('change', function () {
+            var file = this.files[0];
+            if (!file) return;
+            var preview = $('#pf-image-preview');
+            var reader = new FileReader();
+            reader.onload = function (ev) {
+                preview.innerHTML = '<img src="' + ev.target.result + '" style="width:100%;height:100%;object-fit:cover;">';
+                show(preview);
+            };
+            reader.readAsDataURL(file);
+
+            uploadImage(file, function (path) {
+                $('#pf-image').value = path;
+                toast('Image uploaded');
+            });
         });
 
         // Orders — Filter

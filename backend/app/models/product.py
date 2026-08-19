@@ -1,6 +1,6 @@
 """Product database model."""
 
-from sqlalchemy import Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -22,6 +22,7 @@ class Product(Base):
     specs: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
 
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey("categories.id"), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     category = relationship("Category", back_populates="products")
     reviews = relationship("Review", back_populates="product", cascade="all, delete-orphan")
