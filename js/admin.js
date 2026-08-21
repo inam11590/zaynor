@@ -110,7 +110,7 @@
             var tbody = $('#products-table-body');
             tbody.innerHTML = '';
             products.forEach(function (p) {
-                var imgSrc = p.image ? '../' + p.image : '';
+                var imgSrc = p.image ? p.image : '';
                 var statusHtml = p.is_active
                     ? '<span class="status-badge status-delivered">Active</span>'
                     : '<span class="status-badge status-cancelled">Inactive</span>';
@@ -160,7 +160,7 @@
             }
             $('#pf-active').checked = product.is_active !== false;
             if (product.image) {
-                preview.innerHTML = '<img src="../' + esc(product.image) + '" style="width:100%;height:100%;object-fit:cover;">';
+                preview.innerHTML = '<img src="' + esc(product.image) + '" style="width:100%;height:100%;object-fit:cover;">';
                 show(preview);
             }
         } else {
