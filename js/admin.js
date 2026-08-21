@@ -7,7 +7,7 @@
 
     var API = (location.hostname === "localhost" || location.hostname === "127.0.0.1" || !location.hostname)
         ? 'http://127.0.0.1:8000/api/v1'
-        : 'https://zaynor-backend-production.up.railway.app/api/v1';
+        : 'https://zaynor-backend.onrender.com/api/v1';
     var token = localStorage.getItem('zaynor_admin_token');
 
     // ── DOM helpers ──────────────────────────────────────────────────────
