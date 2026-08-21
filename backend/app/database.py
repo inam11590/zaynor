@@ -6,6 +6,10 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./zaynor.db")
 
+# Remove channel_binding (psycopg2 doesn't support it)
+if "channel_binding" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.split("&channel_binding")[0]
+
 # Render PostgreSQL: fix dialect prefix
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
