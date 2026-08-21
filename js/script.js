@@ -9,7 +9,7 @@ const CONFIG = {
     brandName: "ZAYNOR",
     apiBaseUrl: (location.hostname === "localhost" || location.hostname === "127.0.0.1" || !location.hostname)
         ? "http://127.0.0.1:8000/api/v1"
-        : "https://zaynor-backend.onrender.com/api/v1"
+        : "/api/v1"
 };
 
 // Category ID → slug mapping (matches backend database IDs)
