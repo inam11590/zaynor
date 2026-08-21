@@ -5,7 +5,7 @@
 (function () {
     'use strict';
 
-    var API = (location.hostname === "localhost" || location.hostname === "127.0.0.1" || !location.hostname)
+    var API = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
         ? 'http://127.0.0.1:8000/api/v1'
         : 'https://zaynor-api.vercel.app/api/v1';
     var token = localStorage.getItem('zaynor_admin_token');
